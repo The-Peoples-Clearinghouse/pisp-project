@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: thirdparty-api-svc
-          image: mojaloop/thirdparty-api-svc:v11.8.3
+          image: mojaloop/thirdparty-api-svc:v12.0.0
+          # image: mojaloop/thirdparty-api-svc:v11.8.3
           # command: [ "tail", "-f", "/dev/null" ]
           livenessProbe:
             initialDelaySeconds: 30
@@ -48,7 +49,78 @@ kind: ConfigMap
 metadata:
   name: thirdparty-api-svc-config
 data:
-  default.json: {{ (.Files.Get "configs/thirdparty-api-svc.json") | quote }}
+  default.json: |
+    {
+      "PORT": 3008,
+      "HOST": "0.0.0.0",
+      "INSPECT": {
+        "DEPTH": 4,
+        "SHOW_HIDDEN": false,
+        "COLOR": true
+      },
+      "ENDPOINT_CACHE_CONFIG": {
+        "expiresIn": 180000,
+        "generateTimeout": 30000
+      },
+      "ENDPOINT_SERVICE_URL": "http://centralledger:3001",
+      "ERROR_HANDLING": {
+        "includeCauseExtension": true,
+        "truncateExtensions": true
+      },
+      "INSTRUMENTATION": {
+        "METRICS": {
+          "DISABLED": false,
+          "labels": {
+            "eventId": "*"
+          },
+          "config": {
+            "timeout": 5000,
+            "prefix": "moja_3p_api",
+            "defaultLabels": {
+              "serviceName": "thirdparty-api-svc"
+            }
+          }
+        }
+      },
+      "KAFKA": {
+        "TOPIC_TEMPLATES": {
+          "GENERAL_TOPIC_TEMPLATE": {
+            "TEMPLATE": "topic-{{functionality}}-{{action}}",
+            "REGEX": "topic-(.*)-(.*)"
+          }
+        },
+        "CONSUMER": [
+          {
+            "eventType": "notification",
+            "eventAction": "commit",
+            "options": {
+              "mode": 2,
+              "batchSize": 1,
+              "pollFrequency": 10,
+              "recursiveTimeout": 100,
+              "messageCharset": "utf8",
+              "messageAsJSON": true,
+              "sync": true,
+              "consumeTimeout": 1000
+            },
+            "rdkafkaConf": {
+              "client.id": "3p-con-notification-event",
+              "group.id": "3p-group-notification-event",
+              "metadata.broker.list": "kafka:9092",
+              "socket.keepalive.enable": true
+            },
+            "topicConf": {
+              "auto.offset.reset": "earliest"
+            }
+          }
+        ]
+      },
+      "MOCK_CALLBACK": {
+        "transactionRequestId": "abc-12345",
+        "pispId": "pisp"
+      }
+    }
+
 ---
 apiVersion: v1
 kind: Service
@@ -61,7 +133,7 @@ spec:
     app: thirdparty-api-svc
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: thirdparty-api-svc
@@ -70,9 +142,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: thirdparty-api-svc.local
+      http:
         paths:
           - path: /thirdparty-api-svc(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: thirdparty-api-svc
-              servicePort: 4004
+              service:
+                name: thirdparty-api-svc
+                port:
+                  number: 4004

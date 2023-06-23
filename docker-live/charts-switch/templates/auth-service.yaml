@@ -47,7 +47,7 @@ spec:
     app: auth-service
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: auth-service
@@ -56,9 +56,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: auth-service.local
+      http:
         paths:
           - path: /auth-service(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: auth-service
-              servicePort: 4004
+              service:
+                name: auth-service
+                port:
+                  number: 4004

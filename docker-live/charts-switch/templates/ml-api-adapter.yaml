@@ -56,43 +56,22 @@ spec:
     app: ml-api-adapter
   clusterIP: None
 ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: ml-api-adapter
-#   annotations:
-#     nginx.ingress.kubernetes.io/rewrite-target: /$2
-#     nginx.ingress.kubernetes.io/use-regex: "true"
-# spec:
-#   rules:
-#     - http:
-#         paths:
-#           - path: /ml-api-adapter(/|$)(.*)
-#             backend:
-#               serviceName: ml-api-adapter
-#               servicePort: 3000
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: release-name-ml-api-adapter-service
-  namespace: "pisp-lab"
-  labels:
-    app.kubernetes.io/name: ml-api-adapter-service
-    helm.sh/chart: ml-api-adapter-service-13.0.0
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: ml-api-adapter-service-13.0.0
+  name: ml-api-adapter-service
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  ingressClassName: nginx
   rules:
     - host: ml-api-adapter.local
       http:
         paths:
-          - path: /
+          - path: /ml-api-adapter-service(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: release-name-ml-api-adapter-service
+                name: ml-api-adapter-service
                 port:
-                  number: 80
+                  number: 3000

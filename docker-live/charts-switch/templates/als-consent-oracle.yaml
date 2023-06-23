@@ -52,7 +52,41 @@ kind: ConfigMap
 metadata:
   name: als-consent-oracle-config
 data:
-  development_db.json: {{ (.Files.Get "configs/consent-oracle-production_db.json") | quote }}
+  development_db.json: |
+    {
+      "client": "mysql",
+      "version": "5.7",
+      "connection": {
+        "host": "mysql-oracle-consent",
+        "port": 3306,
+        "user": "oracle_consent",
+        "password": "password",
+        "database": "oracle_consent",
+        "timezone": "UTC"
+      },
+      "pool": {
+        "min": 10,
+        "max": 10,
+        "acquireTimeoutMillis": 30000,
+        "createTimeoutMillis": 30000,
+        "destroyTimeoutMillis": 5000,
+        "idleTimeoutMillis": 30000,
+        "reapIntervalMillis": 1000,
+        "createRetryIntervalMillis": 200
+      },
+      "migrations": {
+        "tableName": "oracle_consent",
+        "loadExtensions": [
+          ".ts"
+        ]
+      },
+      "seeds": {
+        "loadExtensions": [
+          ".ts"
+        ]
+      }
+    }
+  # development_db.json: {{ (.Files.Get "configs/consent-oracle-production_db.json") | quote }}
 ---
 apiVersion: v1
 kind: Service
@@ -65,7 +99,7 @@ spec:
     app: als-consent-oracle
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: als-consent-oracle
@@ -74,9 +108,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: als-consent-oracle.local
+      http:
         paths:
           - path: /als-consent-oracle(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: als-consent-oracle
-              servicePort: 3000
+              service:
+                name: als-consent-oracle
+                port:
+                  number: 4001

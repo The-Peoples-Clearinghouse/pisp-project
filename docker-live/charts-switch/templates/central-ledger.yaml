@@ -83,7 +83,7 @@ spec:
     app: central-ledger
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: central-ledger
@@ -92,9 +92,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: central-ledger.local
+      http:
         paths:
           - path: /central-ledger(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: central-ledger
-              servicePort: 3001
+              service:
+                name: central-ledger
+                port:
+                  number: 3001

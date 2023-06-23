@@ -57,7 +57,7 @@ spec:
     app: oracle-simulator
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: oracle-simulator
@@ -66,9 +66,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: oracle-simulator.local
+      http:
         paths:
           - path: /oracle-simulator(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: oracle-simulator
-              servicePort: 8444
+              service:
+                name: oracle-simulator
+                port:
+                  number: 8444

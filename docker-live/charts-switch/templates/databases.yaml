@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-cl
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-cl
+spec:
+  type: NodePort
+  selector:
+    app: mysql-cl
+  ports:
+    - name: mysql-cl
+      protocol: TCP
+      port: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-cl
+spec:
+  serviceName: mysql-cl-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-cl
+  template:
+    metadata:
+      labels:
+        app: mysql-cl
+    spec:
+      containers:
+        - name: mysql-cl
+          image: mysql:5.7
+          args:
+            - "--ignore-db-dir=lost+found"
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+            - name: MYSQL_USER
+              value: central_ledger
+            - name: MYSQL_PASSWORD
+              value: password
+            - name: MYSQL_DATABASE
+              value: central_ledger
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-persistent-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-als
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-als
+spec:
+  type: NodePort
+  selector:
+    app: mysql-als
+  ports:
+    - name: mysql-als
+      protocol: TCP
+      port: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-als
+spec:
+  serviceName: mysql-als-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-als
+  template:
+    metadata:
+      labels:
+        app: mysql-als
+    spec:
+      containers:
+        - name: mysql-als
+          image: mysql:5.7
+          args:
+            - "--ignore-db-dir=lost+found"
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+            - name: MYSQL_USER
+              value: account_lookup
+            - name: MYSQL_PASSWORD
+              value: password
+            - name: MYSQL_DATABASE
+              value: account_lookup
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-persistent-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+---
+# Database oracle-consent
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-oracle-consent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-oracle-consent
+spec:
+  type: NodePort
+  selector:
+    app: mysql-oracle-consent
+  ports:
+    - name: mysql-oracle-consent
+      protocol: TCP
+      port: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-oracle-consent
+spec:
+  serviceName: mysql-oracle-consent-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-oracle-consent
+  template:
+    metadata:
+      labels:
+        app: mysql-oracle-consent
+    spec:
+      containers:
+        - name: mysql-oracle-consent
+          image: mysql:5.7
+          args:
+            - "--ignore-db-dir=lost+found"
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+            - name: MYSQL_USER
+              value: oracle_consent
+            - name: MYSQL_PASSWORD
+              value: password
+            - name: MYSQL_DATABASE
+              value: oracle_consent
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-persistent-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+---

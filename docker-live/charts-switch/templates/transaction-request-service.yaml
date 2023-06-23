@@ -47,7 +47,7 @@ spec:
     app: transaction-requests-service
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: transaction-requests-service
@@ -56,9 +56,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: transaction-requests-service.local
+      http:
         paths:
           - path: /transaction-requests-service(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: transaction-requests-service
-              servicePort: 4003
+              service:
+                name: transaction-requests-service
+                port:
+                  number: 4003

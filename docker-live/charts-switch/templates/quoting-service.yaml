@@ -51,7 +51,7 @@ spec:
     app: quoting-service
   clusterIP: None
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: quoting-service
@@ -60,9 +60,13 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: quoting-service.local
+      http:
         paths:
           - path: /quoting-service(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
-              serviceName: quoting-service
-              servicePort: 3002
+              service:
+                name: quoting-service
+                port:
+                  number: 3002
